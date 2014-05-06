@@ -1,0 +1,157 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<image name='SLES_11_SP3_ReOS_for_OpenStack_summit_20' displayname='SLES_11_SP3_ReOS_for_OpenStack_summit_20' schemaversion='5.2'>
+  <description type='system'>
+    <author>Adam Spiers</author>
+    <contact>aspiers@suse.com</contact>
+    <specification>SLES 11 SP3</specification>
+  </description>
+  <preferences>
+<!--
+    <type format='qcow2' image='vmx' boot='vmxboot/suse-SLES11' filesystem='ext3' fsnocheck='true' primary='true' checkprebuilt='true'>
+      <size unit='M' additive='false'>16384</size>
+    </type>
+-->
+    <type format='vmdk' image='vmx' boot='vmxboot/suse-SLES11' filesystem='ext3' fsnocheck='true'>
+      <size unit='M' additive='false'>16384</size>
+    </type>
+    <version>0.0.1</version>
+    <packagemanager>zypper</packagemanager>
+    <rpm-check-signatures>false</rpm-check-signatures>
+    <rpm-force>false</rpm-force>
+    <boot-theme>studio</boot-theme>
+    <timezone>America/New_York</timezone>
+    <hwclock>localtime</hwclock>
+    <locale>en_US</locale>
+  </preferences>
+  <users group='root'>
+    <user name='root' pwd='$1$UEgt7H0y$uFQj1U3Jt2DCTrkLugoB..' home='/root' shell='/bin/bash'/>
+  </users>
+  <users group='vagrant'>
+    <user name='vagrant' home='/home/vagrant' shell='/bin/bash'/>
+  </users>
+  <packages type='image' patternType='onlyRequired'>
+    <opensusePattern name='base'/>
+    <opensusePattern name='cloud_admin'/>
+    <package name='ntp'/>
+    <package name='gfxboot-branding-SLES'/>
+    <package name='gfxboot-devel'/>
+    <package name='grub'/>
+    <package name='acpid'/>
+    <package name='telnet'/>
+    <package name='xorg-x11-xauth'/>
+    <package name='iotop'/>
+    <package name='screen'/>
+    <package name='nfs-client'/>
+    <package name='yast2-firewall'/>
+    <package name='yast2-network'/>
+    <package name='glibc-locale'/>
+    <package name='patch'/>
+    <package name='gdb'/>
+    <package name='git'/>
+    <package name='rsync'/>
+    <package name='wireshark'/>
+    <package name='man-pages'/>
+    <package name='tcpdump'/>
+    <package name='lsof'/>
+    <package name='ltrace'/>
+    <package name='strace'/>
+    <package name='terminfo'/>
+    <package name='man'/>
+    <package name='emacs'/>
+    <package name='bootsplash-branding-SLES'/>
+    <package name='SuSEfirewall2'/>
+    <package name='kernel-default'/>
+    <package name='kernel-default-devel'/>
+    <package name='gcc'/>
+    <package name='zypper'/>
+    <package name='vim'/>
+    <package name='less'/>
+    <package name='yast2'/>
+    <package name='yast2-ncurses'/>
+    <package name='mdadm'/>
+    <package name='syslog-ng'/>
+    <package name='yast2-firstboot'/>
+    <package name='suse-sam'/>
+    <package name='suse-sam-data'/>
+    <package name='tar'/>
+    <package name='perl-satsolver'/>
+    <package name='openssl-certs'/>
+    <package name='iputils'/>
+    <package name='emacs-x11'/>
+    <package name='net-tools'/>
+    <package name='yast2-ncurses-pkg'/>
+    <package name='man-pages-posix'/>
+    <package name='xorg-x11-fonts'/>
+    <package name='yast2-qt'/>
+    <package name='yast2-gtk'/>
+    <package name='iftop'/>
+    <package name='zerofree'/>
+    <archive name='bootsplash.tar' bootinclude='true'/>
+  </packages>
+  <packages type='bootstrap'>
+    <package name='filesystem'/>
+    <package name='glibc-locale'/>
+    <package name='module-init-tools'/>
+  </packages>
+
+  <!-- see http://doc.opensuse.org/projects/kiwi/doc/#sec.description.repository -->
+
+  <!--
+    For some reason, the SUSE-CLOUD-3-DEPS .iso is not sufficient; kiwi
+    still needs the full SP3.  But that's OK as long as we don't have to
+    embed the whole of SP3 in /srv/tftpboot.
+  -->
+  <repository type='yast2'>
+    <source path='/mnt/sles-11-sp3'/>
+  </repository>
+  <repository type='yast2'>
+    <source path='/mnt/suse-cloud-3-deps'/>
+  </repository>
+<!--
+  Covered by SUSE-CLOUD-3-DEPS:
+
+  <repository type='rpm-md'>
+    <source path='/data/install/mirrors/SLES11-SP3-Updates/sle-11-x86_64'/>
+  </repository>
+-->
+  <repository type='yast2'>
+    <source path='/data/install/mirrors/SLE-11-SP3-SDK/sle-11-x86_64'/>
+  </repository>
+  <repository type='rpm-md'>
+    <source path='/data/install/mirrors/SLE-11-SP3-SDK-Updates/sle-11-x86_64'/>
+  </repository>
+
+  <repository type='yast2'>
+    <source path='/mnt/suse-cloud-3'/>
+  </repository>
+<!--
+Don't need this since the product installation media above provides the same packages:
+
+  <repository type='rpm-md'>
+    <source path='/data/install/mirrors/SUSE-Cloud-3.0-Pool/sle-11-x86_64'/>
+  </repository>
+-->
+<!--
+We don't need these since we're using a recent Devel:Cloud:3:Staging .iso:
+
+  <repository type='rpm-md'>
+    <source path='/data/install/mirrors/SUSE-Cloud-3.0-Updates/sle-11-x86_64'/>
+  </repository>
+
+  <repository type='rpm-md'>
+    <source path='/data/install/mirrors/Devel:Cloud:Shared:11-SP3/sle-11-x86_64'/>
+  </repository>
+  <repository type='rpm-md'>
+    <source path='/data/install/mirrors/Devel:Cloud:Shared:11-SP3:Update/sle-11-x86_64'/>
+  </repository>
+  <repository type='rpm-md'>
+    <source path='/data/install/mirrors/Devel:Cloud:3/sle-11-x86_64'/>
+  </repository>
+  <repository type='rpm-md'>
+    <source path='/data/install/mirrors/Devel:Cloud:3:Staging/sle-11-x86_64'/>
+  </repository>
+-->
+  <repository type='rpm-md'>
+    <source path='opensuse://Virtualization/SLE_11_SP3'/>
+  </repository>
+</image>
