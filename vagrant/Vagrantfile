@@ -7,7 +7,7 @@ vagrantfile_api_version = "2"
 Vagrant.configure(vagrantfile_api_version) do |config|
   config.vm.define :admin, :primary => true do |admin|
     admin.vm.box = "suse/cloud3-admin"
-    #admin.vm.box_url = "http://clouddata.cloud.suse.de/images/SP3-64up.box"
+    #admin.vm.box_url = "http://UPLOAD/ME/images/suse/cloud3-admin.box"
     admin.vm.box_check_update = false
 
     admin.vm.provider "virtualbox" do |provider|
@@ -27,21 +27,124 @@ Vagrant.configure(vagrantfile_api_version) do |config|
     end
 
     admin.vm.network :forwarded_port, guest: 3000, host: 3000
-    admin.vm.network "private_network", ip: "192.168.124.10"
-    # admin.vm.network "public_network"
     # admin.ssh.forward_agent = true
 
     admin.vm.synced_folder ".", "/vagrant", disabled: true
     #admin.vm.synced_folder "/mnt/suse-cloud-3", "/srv/tftpboot/repos/Cloud", type: "nfs"
 
-    # This complains about not being connected to a terminal:
+    # Setup network for admin node and for Crowbar in general.
+    # Vagrant requires the first interface of every VM to be NAT,
+    # which with VirtualBox means it can't communicate with the other
+    # VMs.  And for an HA setup we need two interfaces which are
+    # teamed and able to communicate with other VMs.  On VirtualBox
+    # this means making them host-only.
     #
-    # admin.vm.provision "shell", inline: <<-EOSCRIPT
-    #   export REPOS_SKIP_CHECKS="SLES11_SP3 SLES11-SP3-Pool"
-    #   screen install-suse-cloud -v
-    # EOSCRIPT
+    # However, initial setup for the admin node prior to SUSE Cloud
+    # install doesn't require teaming, just a single NIC on 192.168.124.10.
+    admin.vm.network "private_network", ip: "192.168.124.10"
+
+    admin.vm.provision "file", source: "cloud3-admin/network.json", destination: "/tmp/network.json"
+    # Normally Crowbar seizes control of *all* interfaces.  But in the Vagrant
+    # case we don't want it to touch eth0, so we need this evil patch:
+    admin.vm.provision "file", source: "cloud3-admin/barclamp-network.patch", destination: "/tmp/barclamp-network.patch"
+    admin.vm.provision "shell", inline: <<-EOSCRIPT
+        cd /opt/dell/
+        patch -p1 < /tmp/barclamp-network.patch
+        cp /tmp/network.json /etc/crowbar/network.json
+        rm -f /tmp/network.json
+        rm -f /tmp/barclamp-network.patch
+    EOSCRIPT
+
+    # Automatically install SUSE Cloud on first-boot
+    admin.vm.provision "shell", inline: <<-EOSCRIPT
+       export PATH="$PATH:/sbin:/usr/sbin/"
+       export REPOS_SKIP_CHECKS="SLES11_SP3 SLES11-SP3-Pool"
+       # To trick install-suse-clouds check for "screen". It should be save
+       # to run with screen here. As install-suse-cloud won't pull the network
+       # from eth0 because of the above patch.
+       export STY="dummy"
+       install-suse-cloud -v
+    EOSCRIPT
   end
 
+  2.times do |i|
+    node_name = "controller#{i+1}"
+    config.vm.define node_name do |node|
+      node.vm.box = 'suse/sles11-sp3'
+      #node.vm.box_url = 'http://UPLOAD/ME/images/suse/sles11-sp3.box'
+      node.vm.box_check_update = false
+
+      node.vm.provider 'virtualbox' do |provider|
+        provider.memory = 2048
+        provider.cpus = 4
+
+        # Don't use headless mode
+        provider.gui = true
+
+        # FIXME: create shared disks for SBD, DRBD, and glance
+        # v.customize [ 'createhd', '--filename', 'disk', '--size', 100000 ]
+        # v.customize [
+        #   'storageattach', :id,
+        #   '--storagectl', 'SATA Controller',
+        #   '--port', 1,
+        #   '--device', 0,
+        #   '--type', 'hdd',
+        #   '--medium', 'disk',
+        #   '--mtype', 'shareable',
+        # ]
+      end
+
+      node.vm.provider 'libvirt' do |provider|
+        provider.nested = true
+        provider.volume_cache = 'none'
+
+        # Don't use headless mode
+        provider.gui = true
+      end
+
+      node.vm.network 'private_network', ip: "192.168.124.#{81+i}"
+    end
+  end
+
+  1.times do |i|
+    node_name = "compute#{i+1}"
+    config.vm.define node_name do |node|
+      node.vm.box = 'suse/sles11-sp3'
+      #node.vm.box_url = 'http://UPLOAD/ME/images/suse/sles11-sp3.box'
+      node.vm.box_check_update = false
+
+      node.vm.provider 'virtualbox' do |provider|
+        provider.memory = 2048
+        provider.cpus = 4
+
+        # Don't use headless mode
+        provider.gui = true
+
+        # FIXME: set up cinder-volume disk
+        # v.customize [ 'createhd', '--filename', 'disk', '--size', 100000 ]
+        # v.customize [
+        #   'storageattach', :id,
+        #   '--storagectl', 'SATA Controller',
+        #   '--port', 1,
+        #   '--device', 0,
+        #   '--type', 'hdd',
+        #   '--medium', 'disk'
+        # ]
+      end
+
+      node.vm.provider 'libvirt' do |provider|
+        provider.nested = true
+        provider.volume_cache = 'none'
+
+        # Don't use headless mode
+        provider.gui = true
+      end
+
+      node.vm.network 'private_network', ip: "192.168.124.#{81+i}"
+    end
+  end
+
+  # Not tested yet
   config.vm.provider :libvirt do |libvirt|
     libvirt.host = "localhost"
     libvirt.connect_via_ssh = true
