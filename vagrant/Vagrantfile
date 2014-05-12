@@ -55,6 +55,9 @@ Vagrant.configure(vagrantfile_api_version) do |config|
         cp /tmp/network.json /etc/crowbar/network.json
         rm -f /tmp/network.json
         rm -f /tmp/barclamp-network.patch
+
+        # Scrap pointless 45 second tcpdump per interface
+        sed -i 's/45/5/' /opt/dell/chef/cookbooks/ohai/files/default/plugins/crowbar.rb
     EOSCRIPT
 
     # Automatically install SUSE Cloud on first-boot
@@ -83,14 +86,24 @@ Vagrant.configure(vagrantfile_api_version) do |config|
         # Don't use headless mode
         provider.gui = true
 
+        ## create disk for DRBD
+        provider.customize [ 'createhd', '--filename', "drbd-#{node_name}.vmdk", '--size', 2100, '--format', 'VMDK' ]
+        provider.customize [
+          'storageattach', :id,
+          '--storagectl', 'SCSI',
+          '--port', 1,
+          '--device', 0,
+          '--type', 'hdd',
+          '--medium', "drbd-#{node_name}.vmdk",
+        ]
         # create shared disk for SBD
         provider.customize [ 'createhd', '--filename', 'sbd.vmdk', '--size', 8, '--format', 'VMDK', '--variant', 'Fixed' ]
         provider.customize [ 'modifyhd', 'sbd.vmdk', '--type', 'shareable' ]
         provider.customize [
           'storageattach', :id,
-          '--storagectl', 'IDE',
-          '--port', 0,
-          '--device', 1,
+          '--storagectl', 'SCSI',
+          '--port', 2,
+          '--device', 0,
           '--type', 'hdd',
           '--medium', 'sbd.vmdk',
         ]
@@ -99,35 +112,12 @@ Vagrant.configure(vagrantfile_api_version) do |config|
         provider.customize [ 'modifyhd', 'glance.vmdk', '--type', 'shareable' ]
         provider.customize [
           'storageattach', :id,
-          '--storagectl', 'IDE',
-          '--port', 1,
+          '--storagectl', 'SCSI',
+          '--port', 3,
           '--device', 0,
           '--type', 'hdd',
           '--medium', 'glance.vmdk',
         ]
-        # create shared disk for cinder
-        provider.customize [ 'createhd', '--filename', 'cinder.vmdk', '--size', 1000, '--format', 'VMDK', '--variant', 'Fixed' ]
-        provider.customize [ 'modifyhd', 'cinder.vmdk', '--type', 'shareable' ]
-        provider.customize [
-          'storageattach', :id,
-          '--storagectl', 'IDE',
-          '--port', 1,
-          '--device', 1,
-          '--type', 'hdd',
-          '--medium', 'cinder.vmdk',
-        ]
-        # FIXME: We need to either switch to SATA or SCSI or add another IDE controller 
-        # to the VM before we can attache a 5th disk to the machine.
-        ## create disk for DRBD
-        #provider.customize [ 'createhd', '--filename', 'drbd-#{node_name}.vmdk', '--size', 1100, '--format', 'VMDK' ]
-        #provider.customize [
-        #  'storageattach', :id,
-        #  '--storagectl', 'IDE',
-        #  '--port', 2,
-        #  '--device', 0,
-        #  '--type', 'hdd',
-        #  '--medium', 'drbd-#{node_name}.vmdk',
-        #]
       end
 
       node.vm.provider 'libvirt' do |provider|
@@ -151,6 +141,12 @@ Vagrant.configure(vagrantfile_api_version) do |config|
         wget http://192.168.124.10:8091/suse-11.3/crowbar_register
         chmod a+x crowbar_register
         ./crowbar_register --force --interface eth1  --gpg-auto-import-keys
+
+        # Format glance disk
+        echo y | mkfs.ext3 /dev/sdd
+        echo "/dev/sdd /var/lib/glance ext3 defaults 0 2" >> /etc/fstab
+        mkdir -p /var/lib/glance
+        mount /var/lib/glance
       EOSCRIPT
     end
   end

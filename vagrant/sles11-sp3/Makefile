@@ -2,19 +2,7 @@
 # package", except the .ovf file is taken from this git repository,
 # and the .vmdk is taken from the kiwi build.
 
-BOX_NAME   = sles11-sp3
+BOX_NAME = sles11-sp3
+VMDK = SLES_11_SP3_ReOS_for_OpenStack_summit_2014.x86_64-0.0.1.vmdk
 
-BOX_FILE   = $(BOX_NAME).box
-VMDK       = box-disk1.vmdk
-OVF        = box.ovf
-
-COMPONENTS = Vagrantfile metadata.json $(OVF)
-
-KIWI_IMAGE_DIR = ../../kiwi/$(BOX_NAME)/image
-
-default: $(BOX_FILE)
-
-$(BOX_FILE): $(COMPONENTS)
-	@latest=$$( ls -t $(KIWI_IMAGE_DIR)/*.vmdk | head -n1 ); \
-	echo "latest vmdk is $$latest"; \
-	tar --transform="s,.*\.vmdk,$(VMDK)," -cvf $@ $(COMPONENTS) "$$latest"
+include ../box.make

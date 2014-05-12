@@ -23,17 +23,23 @@ Building this appliance from scratch requires the following:
 
 ### Setting up the mountpoints
 
-The appliance config currently assumes the following mountpoints are
+The appliance config currently assumes the following mountpoint is
 set up on the system which will build the image:
 
-*   SLES11 SP3 installation media at `/mnt/sles-11-sp3`
+*   `/mnt/sles-11-sp3`: SLES11 SP3 installation media
 
-It also assumes that the update channels will have been mirrored to
-the following locations:
+It also assumes that the SDK channel will have been mirrored to
+the following location:
 
-*   `/data/install/mirrors/SLES11-SP3-Updates/sle-11-x86_64`
 *   `/data/install/mirrors/SLE-11-SP3-SDK/sle-11-x86_64`
-*   `/data/install/mirrors/SLE-11-SP3-SDK-Updates/sle-11-x86_64`
+
+You can optionally specify an alternate location to
+`/data/install/mirrors` by ading an extra `sudo` parameter before
+`./build-image.sh`., e.g.
+
+    sudo MIRRORS='/srv/www/htdocs/repo/$RCE' ./build-image.sh
+
+might be a typical case if you are mirroring via SMT.
 
 ### Building the image and cleaning up
 
@@ -47,11 +53,13 @@ build log is there too on successful build.  If something went wrong
 then everything is left in `/tmp/kiwi-build`, and you will need to
 clean that directory up in order to reclaim the disk space.
 
-To speed up builds, the script automatically builds in tmpfs (RAM) if
-it detects sufficient memory.  If the build succeeds it will
-automatically `umount` the RAM disk; however on any type of failure
-you will need to manually `umount` it in order to reclaim a huge chunk
-of RAM!
+To speed up builds, the script automatically builds on a dedicated
+`tmpfs` filesystem (i.e. in RAM) if it detects sufficient memory.  If
+the build succeeds it will automatically `umount` the RAM disk;
+however on any type of failure you will need to manually `umount` it
+in order to reclaim a huge chunk of RAM!  You can disable use of
+`tmpfs` by including `NO_TMPFS=y` as an extra `sudo` parameter before
+`./build-image.sh`.
 
 The boot images are also automatically cached in
 `/var/cache/kiwi/bootimage` to speed up subsequent builds. You'll need

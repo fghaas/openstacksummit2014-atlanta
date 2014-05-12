@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<image name='SLES_11_SP3_ReOS_for_OpenStack_summit_20' displayname='SLES_11_SP3_ReOS_for_OpenStack_summit_20' schemaversion='5.2'>
+<image name='SLES_11_SP3_ReOS_for_OpenStack_summit_2014' displayname='SLES_11_SP3_ReOS_for_OpenStack_summit_2014' schemaversion='5.2'>
   <description type='system'>
     <author>Adam Spiers</author>
     <contact>aspiers@suse.com</contact>
@@ -20,7 +20,7 @@
     <rpm-force>false</rpm-force>
     <boot-theme>studio</boot-theme>
     <timezone>America/New_York</timezone>
-    <hwclock>localtime</hwclock>
+    <hwclock>utc</hwclock>
     <locale>en_US</locale>
   </preferences>
   <users group='root'>
@@ -117,45 +117,52 @@
   <!--
     Updates are *mostly* covered by SUSE-CLOUD-3-DEPS, but we probably
     also want updates for the extra goodies mentioned above.
-  -->
-  <repository type='rpm-md'>
-    <source path='/data/install/mirrors/SLES11-SP3-Updates/sle-11-x86_64'/>
-  </repository>
-  <repository type='yast2'>
-    <source path='/data/install/mirrors/SLE-11-SP3-SDK/sle-11-x86_64'/>
-  </repository>
-  <repository type='rpm-md'>
-    <source path='/data/install/mirrors/SLE-11-SP3-SDK-Updates/sle-11-x86_64'/>
-  </repository>
 
+  <repository type='rpm-md'>
+    <source path='@@MIRRORS@@/SLES11-SP3-Updates/sle-11-x86_64'/>
+  </repository>
+  -->
+  <repository type='yast2'>
+    <source path='@@MIRRORS@@/SLE-11-SP3-SDK/sle-11-x86_64'/>
+  </repository>
+<!--
+None of the packages we get from SDK have updates (and even if they
+do later, we probably don't need them).
+
+  <repository type='rpm-md'>
+    <source path='@@MIRRORS@@/SLE-11-SP3-SDK-Updates/sle-11-x86_64'/>
+  </repository>
+-->
+<!--
   <repository type='yast2'>
     <source path='/mnt/suse-cloud-3'/>
   </repository>
+-->
 <!--
 Don't need this since the product installation media above provides the same packages:
 
   <repository type='rpm-md'>
-    <source path='/data/install/mirrors/SUSE-Cloud-3.0-Pool/sle-11-x86_64'/>
+    <source path='@@MIRRORS@@/SUSE-Cloud-3.0-Pool/sle-11-x86_64'/>
   </repository>
 -->
 <!--
 We don't need these since we're using a recent Devel:Cloud:3:Staging .iso:
 
   <repository type='rpm-md'>
-    <source path='/data/install/mirrors/SUSE-Cloud-3.0-Updates/sle-11-x86_64'/>
+    <source path='@@MIRRORS@@/SUSE-Cloud-3.0-Updates/sle-11-x86_64'/>
   </repository>
 
   <repository type='rpm-md'>
-    <source path='/data/install/mirrors/Devel:Cloud:Shared:11-SP3/sle-11-x86_64'/>
+    <source path='@@MIRRORS@@/Devel:Cloud:Shared:11-SP3/sle-11-x86_64'/>
   </repository>
   <repository type='rpm-md'>
-    <source path='/data/install/mirrors/Devel:Cloud:Shared:11-SP3:Update/sle-11-x86_64'/>
+    <source path='@@MIRRORS@@/Devel:Cloud:Shared:11-SP3:Update/sle-11-x86_64'/>
   </repository>
   <repository type='rpm-md'>
-    <source path='/data/install/mirrors/Devel:Cloud:3/sle-11-x86_64'/>
+    <source path='@@MIRRORS@@/Devel:Cloud:3/sle-11-x86_64'/>
   </repository>
   <repository type='rpm-md'>
-    <source path='/data/install/mirrors/Devel:Cloud:3:Staging/sle-11-x86_64'/>
+    <source path='@@MIRRORS@@/Devel:Cloud:3:Staging/sle-11-x86_64'/>
   </repository>
 -->
   <repository type='rpm-md'>

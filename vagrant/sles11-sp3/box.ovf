@@ -25,7 +25,7 @@
     </ProductSection>
     <AnnotationSection>
       <Info>A human-readable annotation</Info>
-      <Annotation>e</Annotation>
+      <Annotation>This VM contains a preinstalled SLES11 SP3 image streamlined for acting as a Crowbar client node.</Annotation>
     </AnnotationSection>
 <!--
     <EulaSection>
@@ -36,7 +36,7 @@
     <OperatingSystemSection ovf:id="102">
       <Info>The kind of installed guest operating system</Info>
       <Description>Other_64</Description>
-      <vbox:OSType ovf:required="false">Linux_64</vbox:OSType>
+      <vbox:OSType ovf:required="false">Linux</vbox:OSType>
     </OperatingSystemSection>
     <VirtualHardwareSection>
       <Info>Virtual hardware requirements for a virtual machine</Info>
@@ -83,10 +83,19 @@
       </Item>
       <Item>
         <rasd:Address>0</rasd:Address>
+        <rasd:Caption>scsiController0</rasd:Caption>
+        <rasd:Description>SCSI Controller</rasd:Description>
+        <rasd:ElementName>scsiController0</rasd:ElementName>
+        <rasd:InstanceID>5</rasd:InstanceID>
+        <rasd:ResourceSubType>lsilogic</rasd:ResourceSubType>
+        <rasd:ResourceType>6</rasd:ResourceType>
+      </Item>
+      <Item>
+        <rasd:Address>0</rasd:Address>
         <rasd:Caption>usb</rasd:Caption>
         <rasd:Description>USB Controller</rasd:Description>
         <rasd:ElementName>usb</rasd:ElementName>
-        <rasd:InstanceID>5</rasd:InstanceID>
+        <rasd:InstanceID>6</rasd:InstanceID>
         <rasd:ResourceType>23</rasd:ResourceType>
       </Item>
       <Item>
@@ -95,18 +104,9 @@
         <rasd:Description>Disk Image</rasd:Description>
         <rasd:ElementName>disk1</rasd:ElementName>
         <rasd:HostResource>/disk/vmdisk1</rasd:HostResource>
-        <rasd:InstanceID>6</rasd:InstanceID>
-        <rasd:Parent>3</rasd:Parent>
-        <rasd:ResourceType>17</rasd:ResourceType>
-      </Item>
-      <Item>
-        <rasd:AutomaticAllocation>true</rasd:AutomaticAllocation>
-        <rasd:Caption>Ethernet adapter on 'HostOnly'</rasd:Caption>
-        <rasd:Connection>HostOnly</rasd:Connection>
-        <rasd:ElementName>Ethernet adapter on 'HostOnly'</rasd:ElementName>
         <rasd:InstanceID>7</rasd:InstanceID>
-        <rasd:ResourceSubType>E1000</rasd:ResourceSubType>
-        <rasd:ResourceType>10</rasd:ResourceType>
+        <rasd:Parent>5</rasd:Parent>
+        <rasd:ResourceType>17</rasd:ResourceType>
       </Item>
       <Item>
         <rasd:AutomaticAllocation>true</rasd:AutomaticAllocation>
@@ -117,8 +117,17 @@
         <rasd:ResourceSubType>E1000</rasd:ResourceSubType>
         <rasd:ResourceType>10</rasd:ResourceType>
       </Item>
+      <Item>
+        <rasd:AutomaticAllocation>true</rasd:AutomaticAllocation>
+        <rasd:Caption>Ethernet adapter on 'HostOnly'</rasd:Caption>
+        <rasd:Connection>HostOnly</rasd:Connection>
+        <rasd:ElementName>Ethernet adapter on 'HostOnly'</rasd:ElementName>
+        <rasd:InstanceID>9</rasd:InstanceID>
+        <rasd:ResourceSubType>E1000</rasd:ResourceSubType>
+        <rasd:ResourceType>10</rasd:ResourceType>
+      </Item>
     </VirtualHardwareSection>
-    <vbox:Machine ovf:required="false" version="1.12-linux" uuid="{9af1feeb-ad3f-4e16-8e67-c3e48850b06f}" name="sles11-sp3" OSType="Linux_64" snapshotFolder="Snapshots" lastStateChange="2014-05-01T22:55:03Z">
+    <vbox:Machine ovf:required="false" version="1.12-linux" uuid="{9af1feeb-ad3f-4e16-8e67-c3e48850b06f}" name="sles11-sp3" OSType="Linux" snapshotFolder="Snapshots" lastStateChange="2014-05-01T22:55:03Z">
       <ovf:Info>Complete VirtualBox machine configuration in VirtualBox format</ovf:Info>
       <Hardware version="2">
         <CPU count="2" hotplug="false">
@@ -252,10 +261,12 @@
       </Hardware>
       <StorageControllers>
         <StorageController name="IDE" type="PIIX4" PortCount="2" useHostIOCache="true" Bootable="true">
+          <AttachedDevice passthrough="false" type="DVD" port="1" device="0"/>
+        </StorageController>
+        <StorageController name="SCSI" type="LsiLogic" PortCount="16" useHostIOCache="true" Bootable="true">
           <AttachedDevice type="HardDisk" port="0" device="0">
             <Image uuid="{890cc8bb-25c8-4f14-b02f-06e761dde012}"/>
           </AttachedDevice>
-          <AttachedDevice passthrough="false" type="DVD" port="1" device="0"/>
         </StorageController>
       </StorageControllers>
     </vbox:Machine>
