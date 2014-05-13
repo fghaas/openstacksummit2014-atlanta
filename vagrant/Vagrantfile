@@ -38,26 +38,66 @@ Vagrant.configure(vagrantfile_api_version) do |config|
     # VMs.  And for an HA setup we need two interfaces which are
     # teamed and able to communicate with other VMs.  On VirtualBox
     # this means making them host-only.
-    admin.vm.network "private_network", ip: "192.168.124.10"
+    admin.vm.network "private_network", ip: "192.168.124.10", auto_config: false
     # Additional NIC for bonding. The IP address here is just to make vagrant
     # happy it's not actually used inside the VM
     admin.vm.network "private_network", ip: "192.168.124.9", auto_config: false
 
-    admin.vm.provision "file", source: "cloud3-admin/network.json", destination: "/tmp/network.json"
-    # Normally Crowbar seizes control of *all* interfaces.  But in the Vagrant
-    # case we don't want it to touch eth0, so we need this evil patch:
-    admin.vm.provision "file", source: "cloud3-admin/barclamp-network.patch", destination: "/tmp/barclamp-network.patch"
-    admin.vm.provision "file", source: "cloud3-admin/barclamp-provisioner.patch", destination: "/tmp/barclamp-provisioner.patch"
+    files_to_provision = [
+      "cloud3-admin/network.json",
+      # Normally Crowbar seizes control of *all* interfaces.  But in the Vagrant
+      # case we don't want it to touch eth0, so we need this evil patch:
+      "cloud3-admin/barclamp-network-ignore-eth0.patch",
+      "cloud3-admin/barclamp-provisioner-demo-repos.patch",
+
+      # https://github.com/crowbar/barclamp-network/pull/286
+      "cloud3-admin/barclamp-network-teaming-mode.patch",
+
+      # https://github.com/crowbar/barclamp-provisioner/pull/303
+      "cloud3-admin/crowbar_register-hostname.patch",
+
+      # https://github.com/crowbar/barclamp-pacemaker/pull/101 and
+      # https://github.com/crowbar/barclamp-pacemaker/pull/103
+      "cloud3-admin/install-xfsprogs.patch",
+
+      # https://github.com/crowbar/barclamp-pacemaker/pull/102
+      "cloud3-admin/sbd-wait-for-corosync.patch",
+
+      # https://github.com/crowbar/barclamp-crowbar/pull/1024
+      "cloud3-admin/apache-mod_status.patch",
+
+      # https://github.com/crowbar/barclamp-database/pull/84 and
+      # https://github.com/crowbar/barclamp-rabbitmq/pull/42
+      "cloud3-admin/drbd-race.patch",
+    ]
+    files_to_provision.each do |source|
+      filename = File.basename(source)
+      admin.vm.provision "file", source: source, destination: "/tmp/#{filename}"
+    end
     admin.vm.provision "shell", inline: <<-EOSCRIPT
+        set -e
+
         cd /opt/dell/
-        patch -p1 < /tmp/barclamp-network.patch
-        patch -p1 < /tmp/barclamp-provisioner.patch
+        patch -p1 < /tmp/barclamp-network-ignore-eth0.patch
+        patch -p1 < /tmp/barclamp-network-teaming-mode.patch
+        patch -p1 < /tmp/barclamp-provisioner-demo-repos.patch
+        patch -p1 < /tmp/crowbar_register-hostname.patch
+        patch -p1 < /tmp/install-xfsprogs.patch
+        patch -p1 < /tmp/sbd-wait-for-corosync.patch
+        patch -p1 < /tmp/apache-mod_status.patch
+        patch -p1 < /tmp/drbd-race.patch
         cp /tmp/network.json /etc/crowbar/network.json
         rm -f /tmp/network.json
-        rm -f /tmp/barclamp-network.patch
 
         # Scrap pointless 45 second tcpdump per interface
         sed -i 's/45/5/' /opt/dell/chef/cookbooks/ohai/files/default/plugins/crowbar.rb
+
+        # Bypass the provisioner's check for HAE repos, since we're already
+        # providing these via the special SUSE-CLOUD-3-DEPS installation media
+        # in /srv/tftpboot/suse-11.3/install
+        for repo in SLE11-HAE-SP3-{Pool,Updates}; do
+            ln -s ../suse-11.3/install /srv/tftpboot/repos/$repo
+        done
     EOSCRIPT
 
     # Automatically install SUSE Cloud on first-boot
@@ -136,11 +176,19 @@ Vagrant.configure(vagrantfile_api_version) do |config|
       node.vm.network "private_network", ip: "192.168.124.#{81+(i*2)}", auto_config: false
 
       node.vm.provision "shell", inline: <<-EOSCRIPT
+        set -e
+
         export PATH="$PATH:/sbin:/usr/sbin/"
         zypper ar http://192.168.124.10:8091/suse-11.3/install sles11-sp3
-        wget http://192.168.124.10:8091/suse-11.3/crowbar_register
+        until [ -f crowbar_register ]; do
+          wget http://192.168.124.10:8091/suse-11.3/crowbar_register
+        done
         chmod a+x crowbar_register
         ./crowbar_register --force --interface eth1  --gpg-auto-import-keys
+
+        # Set up SBD disk
+        zypper -n in sbd
+        sbd -d /dev/sdc create
 
         # Format glance disk
         echo y | mkfs.ext3 /dev/sdd
@@ -182,9 +230,13 @@ Vagrant.configure(vagrantfile_api_version) do |config|
       node.vm.network "private_network", ip: "192.168.124.#{81+(i*2)}", auto_config: false
 
       node.vm.provision "shell", inline: <<-EOSCRIPT
+        set -e
+
         export PATH="$PATH:/sbin:/usr/sbin/"
         zypper ar http://192.168.124.10:8091/suse-11.3/install sles11-sp3
-        wget http://192.168.124.10:8091/suse-11.3/crowbar_register
+        until [ -f crowbar_register ]; do
+          wget http://192.168.124.10:8091/suse-11.3/crowbar_register
+        done
         chmod a+x crowbar_register
         ./crowbar_register --force --interface eth1  --gpg-auto-import-keys
       EOSCRIPT
