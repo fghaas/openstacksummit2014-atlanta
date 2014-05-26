@@ -1,12 +1,12 @@
 # Automated Deployment of a Highly Available OpenStack Cloud
 
-This repository contains the training materials used for
+This repository provides the training materials used for
 [the workshop session given on Thursday May 15 at the OpenStack summit in
 Atlanta](http://openstacksummitmay2014atlanta.sched.org/event/d3db2188dfed4459f8fbd03f5b405b81).
 
-## Contents
+## Resources
 
-* the presentation
+* the presentation deck
     *   You can [view this online](http://fghaas.github.io/openstacksummit2014-atlanta/).
         If you want to view it locally, after cloning this repository
         you will have to check out the
@@ -17,6 +17,8 @@ Atlanta](http://openstacksummitmay2014atlanta.sched.org/event/d3db2188dfed4459f8
 
             git submodule init
             git submodule update
+* a [video recording of the presentation](http://youtu.be/wu4TsaJQ_fg)
+* the [workshop script](https://docs.google.com/document/d/1kZl8Ik6oH2YrOkv1UK86QP7sWn4VgmSJ9yC0HcJjXkI/edit?usp=sharing) which walks you through all the technical steps required to build a highly available OpenStack cloud from scratch
 * [resources for building the KIWI appliances](kiwi/)
 * [resources for building the Vagrant boxes](vagrant/) from the KIWI appliances
 
